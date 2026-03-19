@@ -1,10 +1,18 @@
 <template>
-  <router-view/>
+  <div id="app">
+    <AgeGate />
+    <router-view/>
+  </div>
 </template>
 
 <script>
+import AgeGate from './components/AgeGate.vue';
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    AgeGate
+  }
 }
 </script>
 

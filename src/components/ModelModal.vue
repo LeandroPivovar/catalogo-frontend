@@ -8,7 +8,26 @@
         </button>
 
         <div class="modal-content" v-if="model">
-          <div class="main-layout">
+          <!-- UNAUTHENTICATED BLUR OVERLAY -->
+          <div v-if="!isLoggedIn" class="restricted-overlay">
+            <div class="restricted-content">
+              <i class="fas fa-user-shield shield-icon"></i>
+              <h2>Conteúdo Restrito</h2>
+              <p class="restricted-text">
+                Devido as novas leis de proteção de conteúdo adulto você precisará ter uma conta verificada para acessar as fotos e links da modelo, fique tranquilo, isto é apenas para confirmar que você tem mais de 18 anos, tudo é mantido com privacidade
+              </p>
+              <div class="restricted-actions">
+                <button class="auth-btn login-btn" @click="$router.push('/auth')">
+                  ENTRAR
+                </button>
+                <button class="auth-btn register-btn" @click="$router.push('/auth')">
+                  CRIAR CONTA
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="main-layout" :class="{ 'is-blurred': !isLoggedIn }">
             <!-- Gallery Left -->
             <div class="gallery-column">
               <div class="main-image-container">
@@ -75,7 +94,8 @@ export default {
   },
   data() {
     return {
-      activeImage: ""
+      activeImage: "",
+      isLoggedIn: false
     };
   },
   watch: {
@@ -90,12 +110,19 @@ export default {
     isOpen(newVal) {
       if (newVal) {
         document.body.style.overflow = 'hidden';
+        this.checkLogin();
       } else {
         document.body.style.overflow = '';
       }
     }
   },
+  mounted() {
+    this.checkLogin();
+  },
   methods: {
+    checkLogin() {
+      this.isLoggedIn = !!localStorage.getItem('token');
+    },
     close() {
       this.$emit('close');
     },
@@ -201,6 +228,95 @@ export default {
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 40px;
   align-items: start;
+  transition: filter 0.3s ease;
+}
+
+.main-layout.is-blurred {
+  filter: blur(15px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.restricted-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.restricted-content {
+  background-color: rgba(12, 8, 8, 0.85);
+  border: 1px solid rgba(214, 36, 74, 0.3);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 500px;
+  text-align: center;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: modal-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.shield-icon {
+  font-size: 3rem;
+  color: #d6244a;
+  margin-bottom: 20px;
+}
+
+.restricted-content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  font-weight: 800;
+}
+
+.restricted-text {
+  color: #eee;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin-bottom: 30px;
+}
+
+.restricted-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-btn {
+  background-color: #d6244a;
+  color: #fff;
+}
+
+.login-btn:hover {
+  background-color: #e02b54;
+  transform: translateY(-2px);
+}
+
+.register-btn {
+  background-color: transparent;
+  border: 1px solid #333;
+  color: #aaa;
+}
+
+.register-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
 }
 
 .main-image-container {

@@ -60,7 +60,7 @@
           <router-link to="/" class="menu-item" @click="showMenu = false">
             <i class="fas fa-home"></i> Home
           </router-link>
-          <router-link to="/dashboard" class="menu-item" @click="showMenu = false">
+          <router-link v-if="userRole !== 'visualizador'" to="/dashboard" class="menu-item" @click="showMenu = false">
             <i class="fas fa-th-large"></i> Dashboard
           </router-link>
           <a href="#" class="menu-item logout" @click.prevent="logout">
@@ -105,7 +105,8 @@ export default {
   data() {
     return {
       showMenu: false,
-      isLoggedIn: false
+      isLoggedIn: false,
+      userRole: ''
     };
   },
   watch: {
@@ -125,6 +126,7 @@ export default {
   methods: {
     checkLoginStatus() {
       this.isLoggedIn = !!localStorage.getItem('token');
+      this.userRole = localStorage.getItem('userRole');
     },
     logout() {
       this.showMenu = false;

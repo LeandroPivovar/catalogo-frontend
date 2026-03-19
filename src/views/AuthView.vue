@@ -60,6 +60,29 @@
 
           <!-- REGISTER FORM -->
           <div v-else-if="activeTab === 'register'" class="auth-form" key="register">
+            <!-- User Type Selection -->
+            <div class="form-group">
+              <label>O que você deseja fazer?</label>
+              <div class="role-selector">
+                <button 
+                  class="role-btn" 
+                  :class="{ active: registerData.role === 'visualizador' }"
+                  @click="registerData.role = 'visualizador'"
+                >
+                  <i class="fas fa-eye"></i>
+                  <span>Apenas Visualizar</span>
+                </button>
+                <button 
+                  class="role-btn" 
+                  :class="{ active: registerData.role === 'modelo' }"
+                  @click="registerData.role = 'modelo'"
+                >
+                  <i class="fas fa-camera"></i>
+                  <span>Ser uma Modelo</span>
+                </button>
+              </div>
+            </div>
+
             <div class="form-group">
               <label>Nome Completo</label>
               <div class="input-wrapper">
@@ -68,7 +91,7 @@
               </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" v-if="registerData.role === 'modelo'">
               <div class="form-group">
                 <label>CPF</label>
                 <div class="input-wrapper">
@@ -85,9 +108,9 @@
               </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" v-if="registerData.role === 'modelo'">
               <div class="form-group file-group">
-                <label>RG Frente</label>
+                <label>RG Frente (Opcional)</label>
                 <div class="file-preview-container" @click="$refs.rgFrente.click()">
                   <input type="file" ref="rgFrente" hidden accept="image/*" @change="handleFile($event, 'rgFrente')">
                   <div v-if="rgFrentePreview" class="preview-box">
@@ -101,7 +124,7 @@
                 </div>
               </div>
               <div class="form-group file-group">
-                <label>RG Verso</label>
+                <label>RG Verso (Opcional)</label>
                 <div class="file-preview-container" @click="$refs.rgVerso.click()">
                   <input type="file" ref="rgVerso" hidden accept="image/*" @change="handleFile($event, 'rgVerso')">
                   <div v-if="rgVersoPreview" class="preview-box">
@@ -186,7 +209,8 @@ export default {
         birthDate: '',
         phone: '',
         email: '',
-        password: ''
+        password: '',
+        role: 'visualizador'
       },
       loading: false
     };
@@ -199,6 +223,7 @@ export default {
         const response = await api.post('/auth/login', this.loginData);
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userStatus', response.data.user.status);
+        localStorage.setItem('userRole', response.data.user.role);
         localStorage.setItem('emailVerified', response.data.user.emailVerified);
         
         if (!response.data.user.emailVerified) {
@@ -209,8 +234,9 @@ export default {
           this.showToast('Login realizado com sucesso! Redirecionando...');
         }
         
-        // Se para a conta for pending ou e-mail não verificado, o router/dashboard redirecionará para /pending
-        setTimeout(() => this.$router.push('/dashboard'), 1500);
+        // Redirecionamento baseado no papel
+        const target = response.data.user.role === 'visualizador' ? '/' : '/dashboard';
+        setTimeout(() => this.$router.push(target), 1500);
       } catch (error) {
         if (error.response?.data?.status === 'rejected') {
           this.showToast('Sua conta foi reprovada. Entre em contato com o suporte.', 'error');
@@ -223,16 +249,13 @@ export default {
       }
     },
     async handleRegister() {
-      if (this.loading) return;
-      if (!this.rgFrentePreview || !this.rgVersoPreview) {
-        this.showToast('Por favor, envie as fotos do RG frente e verso.', 'error');
+      if (this.registerData.role === 'modelo' && !this.registerData.cpf) {
+        this.showToast('Por favor, informe seu CPF.', 'error');
         return;
       }
       
       this.loading = true;
       try {
-        // Para fins de POC, estamos enviando as URLs como placeholders
-        // No futuro, implementaremos o upload real de arquivos
         const data = {
           ...this.registerData,
           rgFrenteUrl: this.rgFrentePreview,
@@ -242,14 +265,17 @@ export default {
         const response = await api.post('/auth/register', data);
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userStatus', response.data.user.status);
+        localStorage.setItem('userRole', response.data.user.role);
         localStorage.setItem('emailVerified', response.data.user.emailVerified);
         
-        this.registerData = { name: '', cpf: '', birthDate: '', phone: '', email: '', password: '' };
+        const role = this.registerData.role;
+        this.registerData = { name: '', cpf: '', birthDate: '', phone: '', email: '', password: '', role: 'visualizador' };
         this.rgFrentePreview = '';
         this.rgVersoPreview = '';
         
         this.showToast('Cadastro recebido! Redirecionando...');
-        setTimeout(() => this.$router.push('/dashboard'), 1500);
+        const target = role === 'visualizador' ? '/' : '/dashboard';
+        setTimeout(() => this.$router.push(target), 1500);
       } catch (error) {
         const message = error.response?.data?.error || error.response?.data?.message || 'Erro ao realizar cadastro.';
         this.showToast(message, 'error');
@@ -321,6 +347,42 @@ export default {
   color: #888;
   font-size: 0.95rem;
   margin-bottom: 25px;
+}
+
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.role-btn {
+  background-color: #1a1a1a;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 15px;
+  color: #aaa;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.role-btn i {
+  font-size: 1.2rem;
+}
+
+.role-btn span {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.role-btn.active {
+  background-color: rgba(214, 36, 74, 0.1);
+  border-color: #d6244a;
+  color: #d6244a;
 }
 
 .auth-tabs {

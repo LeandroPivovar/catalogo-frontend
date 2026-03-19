@@ -68,6 +68,8 @@ router.beforeEach((to, from, next) => {
   const isPending = userStatus === 'pending';
   const isRejected = userStatus === 'rejected';
   const isAdmin = userRole === 'admin';
+  const isModelo = userRole === 'modelo';
+  const isVisualizador = userRole === 'visualizador';
 
   // Guard para Admin
   if (to.matched.some(record => record.meta.requiresAdmin)) {
@@ -82,16 +84,21 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!token) {
       next({ name: 'auth' });
+    } else if (isVisualizador && to.name !== 'home') {
+      // Visualizador não tem acesso a rotas protegidas (dashboard, pending)
+      next({ name: 'home' });
     } else if ((isPending || isRejected) && to.name !== 'pending') {
       next({ name: 'pending' });
-    } else if (!isPending && !isRejected && to.name === 'pending') {
+    } else if (isModelo && !isPending && !isRejected && to.name === 'pending') {
       next({ name: 'dashboard' });
     } else {
       next();
     }
   } else if (to.matched.some(record => record.meta.requiresGuest)) {
     if (token) {
-      if (isPending) {
+      if (isVisualizador) {
+        next({ name: 'home' });
+      } else if (isPending) {
         next({ name: 'pending' });
       } else {
         next({ name: 'dashboard' });
