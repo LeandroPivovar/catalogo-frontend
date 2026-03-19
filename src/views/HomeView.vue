@@ -42,7 +42,7 @@
 import HeaderComponent from "../components/HeaderComponent.vue";
 import GalleryComponent from "../components/GalleryComponent.vue";
 import ModelModal from "../components/ModelModal.vue";
-import api from "../services/api";
+import api, { getImageUrl } from "../services/api";
 
 export default {
   name: "HomeView",
@@ -160,8 +160,10 @@ export default {
           } else if (!mainImage) {
             mainImage = 'https://via.placeholder.com/800x600?text=Sem+Foto';
           }
-
-          const allImages = [mainImage, ...photos.map(p => p.src || p)];
+          
+          // Resolver URLs (Suporte a Path em disco)
+          mainImage = getImageUrl(mainImage);
+          const allImages = [mainImage, ...photos.map(p => getImageUrl(p.src || p))];
 
           let calculatedAge = null;
           if (user.birthDate) {

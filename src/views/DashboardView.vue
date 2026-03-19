@@ -406,7 +406,7 @@
 <script>
 import HeaderComponent from "../components/HeaderComponent.vue";
 import * as echarts from 'echarts';
-import api from "../services/api";
+import api, { getImageUrl } from "../services/api";
 
 export default {
   name: "DashboardView",
@@ -567,7 +567,11 @@ export default {
             const photos = typeof userData.galleryPhotos === 'string' 
               ? JSON.parse(userData.galleryPhotos) 
               : userData.galleryPhotos;
-            this.profile.photos = photos;
+            // Resolver URLs de cada foto da galeria
+            this.profile.photos = photos.map(p => {
+              if (typeof p === 'string') return { src: getImageUrl(p) };
+              return { ...p, src: getImageUrl(p.src) };
+            });
           } catch (e) {
             console.error("Erro ao processar fotos:", e);
           }
@@ -576,9 +580,13 @@ export default {
         if (userData.coverPhotoUrl) {
           try {
             const parsedCover = JSON.parse(userData.coverPhotoUrl);
-            this.profile.coverPhoto = parsedCover.src ? parsedCover : { src: userData.coverPhotoUrl };
+            const src = parsedCover.src ? parsedCover.src : userData.coverPhotoUrl;
+            this.profile.coverPhoto = { 
+              ...parsedCover, 
+              src: getImageUrl(src) 
+            };
           } catch(e) {
-            this.profile.coverPhoto = { src: userData.coverPhotoUrl };
+            this.profile.coverPhoto = { src: getImageUrl(userData.coverPhotoUrl) };
           }
         }
         this.credits = userData.credits || 0;

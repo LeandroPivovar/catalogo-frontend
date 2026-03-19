@@ -18,4 +18,14 @@ api.interceptors.request.use(config => {
     return Promise.reject(error);
 });
 
+export const getImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('data:') || path.startsWith('http')) {
+        return path;
+    }
+    // Remove o '/api' da baseURL para pegar a raiz do servidor onde as fotos estão
+    const rootUrl = api.defaults.baseURL.replace('/api', '');
+    return `${rootUrl}${path}`;
+};
+
 export default api;

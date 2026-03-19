@@ -75,12 +75,12 @@
                 <div class="rg-side">
                   <p>RG Frente</p>
                   <div v-if="!user.rgFront" class="no-photo-placeholder">Documento Ausente</div>
-                  <img v-else :src="user.rgFront" @click="openImage(user.rgFront)">
+                  <img v-else :src="getImageUrl(user.rgFront)" @click="openImage(getImageUrl(user.rgFront))">
                 </div>
                 <div class="rg-side">
                   <p>RG Verso</p>
                   <div v-if="!user.rgBack" class="no-photo-placeholder">Documento Ausente</div>
-                  <img v-else :src="user.rgBack" @click="openImage(user.rgBack)">
+                  <img v-else :src="getImageUrl(user.rgBack)" @click="openImage(getImageUrl(user.rgBack))">
                 </div>
               </div>
               <div class="card-actions">
@@ -301,7 +301,7 @@
 </template>
 
 <script>
-import api from "../services/api";
+import api, { getImageUrl } from "../services/api";
 
 export default {
   name: "AdminDashboardView",
