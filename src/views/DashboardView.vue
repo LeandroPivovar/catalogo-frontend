@@ -488,6 +488,7 @@ export default {
   created() {
     this.fetchProfile();
     this.fetchPlans();
+    this.fetchAnalytics(); // Carregar métricas em background
   },
   mounted() {
     if (this.currentTab === 'metrics') {
@@ -522,6 +523,7 @@ export default {
     },
     currentTab(newTab) {
       if (newTab === 'metrics') {
+        this.fetchAnalytics(); // Garantir dados frescos ao abrir a aba
         this.$nextTick(() => this.initCharts());
       }
     }
@@ -1016,6 +1018,18 @@ export default {
       } catch (error) {
         const message = error.response?.data?.message || 'Erro ao alterar senha.';
         this.showToast(message, 'error');
+      }
+    },
+    async fetchAnalytics() {
+      try {
+        const res = await api.get(`/analytics/dashboard?period=${this.chartPeriod}`);
+        this.analyticsStats = res.data.stats;
+        this.analyticsChart = res.data.chartData;
+        if (this.currentTab === 'metrics') {
+          this.initCharts();
+        }
+      } catch (e) {
+        console.error("Erro ao carregar métricas:", e);
       }
     }
   }
