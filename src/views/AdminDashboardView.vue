@@ -21,6 +21,9 @@
         <button class="nav-item" :class="{ active: activeTab === 'users' }" @click="activeTab = 'users'">
           <i class="fas fa-users-cog"></i> Gerenciar Usuários
         </button>
+        <button class="nav-item" :class="{ active: activeTab === 'settings' }" @click="activeTab = 'settings'">
+          <i class="fas fa-cog"></i> Configurações
+        </button>
         <div class="nav-spacer"></div>
         <button class="nav-item logout" @click="logout"><i class="fas fa-sign-out-alt"></i> Sair</button>
       </nav>
@@ -178,7 +181,24 @@
         </div>
       </div>
 
-      <!-- TAB: USER MANAGEMENT -->
+      <!-- TAB: SETTINGS -->
+      <div v-if="activeTab === 'settings'" class="tab-content fade-in">
+        <div class="settings-grid">
+          <div class="setting-card glass">
+            <h3>Configurações de Impulsionamento</h3>
+            <p class="setting-desc">Defina quantos créditos são consumidos por cada "Boost Now" ou Agendamento.</p>
+            <div class="form-group-admin" style="margin-top: 20px;">
+              <label>Custo do Boost (Créditos)</label>
+              <div class="input-with-button">
+                <input type="number" v-model="boostCostInput">
+                <button class="btn-save-setting" @click="updateSetting('boost_cost', boostCostInput)">Salvar</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Futuras configurações podem ser adicionadas aqui -->
+        </div>
+      </div>
       <div v-if="activeTab === 'users'" class="tab-content fade-in">
         <section class="user-management glass">
           <div class="section-header">
@@ -315,16 +335,18 @@ export default {
       editingUser: null,
       editForm: {},
       zoomUrl: null,
-      finance: { summary: { daily: 0, monthly: 0, total: 0, projection: 0 }, recentSales: [], dailyHistory: [] }
+      finance: { summary: { daily: 0, monthly: 0, total: 0, projection: 0 }, recentSales: [], dailyHistory: [] },
+      settings: [],
+      boostCostInput: 10
     };
   },
   computed: {
     tabTitle() {
-      const titles = { overview: 'Dashboard', approvals: 'Aprovações de Cadastro', plans: 'Configuração de Vendas', users: 'Central de Modelos', finance: 'Inteligência Financeira' };
+      const titles = { overview: 'Dashboard', approvals: 'Aprovações de Cadastro', plans: 'Configuração de Vendas', users: 'Central de Modelos', finance: 'Inteligência Financeira', settings: 'Configurações Globais' };
       return titles[this.activeTab];
     },
     tabSubtitle() {
-      const subs = { overview: 'Performance geral', approvals: 'Análise de documentos KYC', plans: 'Preços e pacotes de impulsos', users: 'Gestão de base cadastrada', finance: 'Faturamento e Projeções de Lucro' };
+      const subs = { overview: 'Performance geral', approvals: 'Análise de documentos KYC', plans: 'Preços e pacotes de impulsos', users: 'Gestão de base cadastrada', finance: 'Faturamento e Projeções de Lucro', settings: 'Ajustes de sistema e regras de negócio' };
       return subs[this.activeTab];
     },
     pendingList() { return this.users.filter(u => u.status === 'pending'); },
@@ -336,16 +358,21 @@ export default {
   created() { this.fetchData(); },
   methods: {
     async fetchData() {
-      const [s, u, p, f] = await Promise.all([
+      const [s, u, p, f, st] = await Promise.all([
         api.get("/admin/stats"), 
         api.get("/admin/users"), 
         api.get("/admin/plans"),
-        api.get("/admin/finance")
+        api.get("/admin/finance"),
+        api.get("/admin/settings")
       ]);
       this.stats = s.data; 
       this.users = u.data; 
       this.plans = p.data;
       this.finance = f.data;
+      this.settings = st.data;
+
+      const boostCost = this.settings.find(s => s.key === 'boost_cost');
+      if (boostCost) this.boostCostInput = boostCost.value;
     },
     async quickUpdateStatus(id, status) {
       await api.put(`/admin/users/${id}/status`, { status });
@@ -359,6 +386,15 @@ export default {
     async saveUserEdit() {
       await api.put(`/admin/users/${this.editForm.id}`, this.editForm);
       this.editingUser = null; this.fetchData();
+    },
+    async updateSetting(key, value) {
+      try {
+        await api.post("/admin/settings", { key, value: String(value) });
+        alert("Configuração atualizada!");
+        this.fetchData();
+      } catch (e) {
+        alert("Erro ao salvar configuração.");
+      }
     },
     getImageUrl(path) { return getImageUrl(path); },
     openImage(url) { 
@@ -427,6 +463,15 @@ export default {
 .action-btn.edit:hover { border-color: #3498db; color: #3498db; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2); }
 .action-btn.ban:hover { border-color: #e74c3c; color: #e74c3c; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2); }
 .action-btn.approve:hover { border-color: #2ecc71; color: #2ecc71; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); }
+
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
+.setting-card { padding: 30px; border-radius: 24px; border: 1px solid #111; }
+.setting-card h3 { margin-bottom: 10px; font-weight: 800; }
+.setting-desc { color: #555; font-size: 0.85rem; margin-bottom: 20px; }
+.input-with-button { display: flex; gap: 10px; }
+.input-with-button input { flex: 1; }
+.btn-save-setting { background: #bd2727; color: #fff; border: none; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.btn-save-setting:hover { background: #d42b2b; transform: translateY(-2px); }
 
 .search-box { position: relative; margin-bottom: 25px; max-width: 400px; }
 .search-box i { position: absolute; left: 15px; top: 18px; color: #333; pointer-events: none; }
