@@ -171,6 +171,16 @@
             <h2 class="section-title">Impulsionar Perfil</h2>
             <p class="section-subtitle">Escolha como deseja impulsionar seu perfil</p>
 
+            <!-- CARD DE IMPULSIONAMENTO AGENDADO -->
+            <div v-if="scheduledBoost" class="scheduled-boost-card">
+              <div class="scheduled-icon"><i class="fas fa-clock"></i></div>
+              <div class="scheduled-info">
+                <span class="scheduled-label">Impulsionamento Agendado</span>
+                <span class="scheduled-time">Seu perfil irá para o Top 1 em: <strong>{{ scheduledBoost }}</strong></span>
+              </div>
+              <div class="scheduled-badge">Ativo</div>
+            </div>
+
             <div class="boost-tabs">
               <button 
                 class="boost-tab" 
@@ -483,6 +493,18 @@ export default {
     emptyPlaceholders() {
       const count = 10 - this.profile.photos.length - (this.profile.photos.length < 10 ? 1 : 0);
       return Math.max(0, count);
+    },
+    scheduledBoost() {
+      if (!this.profile.boostedAt) return null;
+      const boostDate = new Date(this.profile.boostedAt);
+      const now = new Date();
+      if (boostDate > now) {
+        return boostDate.toLocaleString('pt-BR', { 
+          day: '2-digit', month: '2-digit', year: 'numeric', 
+          hour: '2-digit', minute: '2-digit' 
+        });
+      }
+      return null;
     }
   },
   created() {
@@ -591,6 +613,7 @@ export default {
             this.profile.coverPhoto = { src: getImageUrl(userData.coverPhotoUrl) };
           }
         }
+        this.profile.boostedAt = userData.boostedAt || null;
         this.credits = userData.credits || 0;
       } catch (error) {
         console.error("Erro ao buscar perfil:", error);
@@ -1893,6 +1916,71 @@ export default {
 .pix-success-state p {
   color: #aaa;
   margin-bottom: 30px;
+}
+
+.scheduled-boost-card {
+  background: #141414;
+  border: 1px solid #1f1f1f;
+  border-left: 4px solid #bd2727;
+  border-radius: 12px;
+  padding: 15px 20px;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.scheduled-icon {
+  font-size: 1.2rem;
+  color: #bd2727;
+  background: rgba(189, 39, 39, 0.1);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.scheduled-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.scheduled-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #bd2727;
+  letter-spacing: 0.5px;
+}
+
+.scheduled-time {
+  font-size: 0.95rem;
+  color: #ccc;
+  margin-top: 2px;
+}
+
+.scheduled-time strong {
+  color: #fff;
+}
+
+.scheduled-badge {
+  background: rgba(255, 255, 255, 0.05);
+  color: #888;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 </style>
