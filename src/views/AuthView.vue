@@ -239,6 +239,7 @@ export default {
           rgVersoUrl: this.rgVersoPreview
         };
         
+        const response = await api.post('/auth/register', data);
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userStatus', response.data.user.status);
         localStorage.setItem('emailVerified', response.data.user.emailVerified);
