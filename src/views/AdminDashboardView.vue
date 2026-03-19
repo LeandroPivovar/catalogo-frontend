@@ -74,11 +74,13 @@
               <div class="rg-viewer">
                 <div class="rg-side">
                   <p>RG Frente</p>
-                  <img :src="user.rgFront || 'https://via.placeholder.com/300x200?text=RG+Frente'" @click="openImage(user.rgFront)">
+                  <div v-if="!user.rgFront" class="no-photo-placeholder">Documento Ausente</div>
+                  <img v-else :src="user.rgFront" @click="openImage(user.rgFront)">
                 </div>
                 <div class="rg-side">
                   <p>RG Verso</p>
-                  <img :src="user.rgBack || 'https://via.placeholder.com/300x200?text=RG+Verso'" @click="openImage(user.rgBack)">
+                  <div v-if="!user.rgBack" class="no-photo-placeholder">Documento Ausente</div>
+                  <img v-else :src="user.rgBack" @click="openImage(user.rgBack)">
                 </div>
               </div>
               <div class="card-actions">
@@ -387,6 +389,7 @@ export default {
 .approval-card { padding: 30px; border-radius: 24px; border: 1px solid #111; }
 .rg-viewer { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
 .rg-side img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+.no-photo-placeholder { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #0a0a0a; border: 1px dashed #222; border-radius: 10px; color: #333; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
 .rg-side p { font-size: 0.7rem; color: #444; margin-bottom: 5px; }
 
 .btn-approve-full { width: 100%; padding: 15px; background: #2ecc71; color: #fff; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 10px; }
