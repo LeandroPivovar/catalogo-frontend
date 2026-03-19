@@ -63,7 +63,7 @@
                 <h3 class="subsection-title">Foto de Capa</h3>
                 <div class="cover-uploader" @click="triggerUpload('cover')">
                   <div v-if="profile.coverPhoto" class="crop-preview-wrapper cover">
-                    <img :src="profile.coverPhoto.src" :style="getCropStyle(profile.coverPhoto.crop)">
+                    <img :src="profile.coverPhoto.src" :style="getCropStyle(profile.coverPhoto.crop)" loading="lazy">
                   </div>
                   <div v-else class="upload-placeholder vertical">
                     <i class="fas fa-plus"></i>
@@ -77,7 +77,7 @@
                 <div class="gallery-grid-fixed">
                   <div v-for="(photo, index) in profile.photos" :key="index" class="photo-thumbnail">
                     <div class="crop-preview-wrapper gallery">
-                      <img :src="photo.src" :style="getCropStyle(photo.crop)">
+                      <img :src="photo.src" :style="getCropStyle(photo.crop)" loading="lazy">
                     </div>
                     <button type="button" class="remove-btn" @click="removePhoto(index)">&times;</button>
                   </div>

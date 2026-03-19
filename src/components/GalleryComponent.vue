@@ -9,7 +9,13 @@
         @click="$emit('show-profile', model.id)"
       >
         <div class="card-image-wrapper">
-          <img :src="model.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?fit=crop&w=400&h=550&q=80'" :alt="model.name" class="profile-image" :style="getCropStyle(model.coverCrop)">
+          <img 
+            :src="model.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?fit=crop&w=400&h=550&q=80'" 
+            :alt="model.name" 
+            class="profile-image" 
+            :style="getCropStyle(model.coverCrop)"
+            loading="lazy"
+          >
           <div class="image-overlay"></div>
           <div v-if="model.isPremium" class="premium-badge">
             <i class="fas fa-crown"></i>

@@ -12,7 +12,7 @@
             <!-- Gallery Left -->
             <div class="gallery-column">
               <div class="main-image-container">
-                <img :src="activeImage" :alt="model.name" class="main-image">
+                <img :src="activeImage" :alt="model.name" class="main-image" loading="lazy">
               </div>
               
               <div class="thumbnail-slider-wrapper">
@@ -27,7 +27,7 @@
                     :class="{ active: activeImage === img }"
                     @click="activeImage = img"
                   >
-                    <img :src="img" alt="Thumbnail" class="thumb-img">
+                    <img :src="img" alt="Thumbnail" class="thumb-img" loading="lazy">
                   </div>
                 </div>
                 <button class="nav-arrow right" @click="scrollThumbnails('right')">
