@@ -1021,15 +1021,22 @@ export default {
       }
     },
     async fetchAnalytics() {
+      console.log("Iniciando busca de analytics para período:", this.chartPeriod);
       try {
         const res = await api.get(`/analytics/dashboard?period=${this.chartPeriod}`);
-        this.analyticsStats = res.data.stats;
-        this.analyticsChart = res.data.chartData;
+        console.log("Resposta Analytics recebida:", res.data);
+        
+        if (res.data && res.data.stats) {
+          this.analyticsStats = { ...res.data.stats };
+          this.analyticsChart = res.data.chartData || [];
+          console.log("Métricas atualizadas no estado Vue:", this.analyticsStats);
+        }
+
         if (this.currentTab === 'metrics') {
-          this.initCharts();
+          this.$nextTick(() => this.initCharts());
         }
       } catch (e) {
-        console.error("Erro ao carregar métricas:", e);
+        console.error("Erro ao carregar métricas no Dashboard:", e);
       }
     }
   }
