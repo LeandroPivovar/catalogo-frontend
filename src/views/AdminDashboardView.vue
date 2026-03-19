@@ -360,6 +360,7 @@ export default {
       await api.put(`/admin/users/${this.editForm.id}`, this.editForm);
       this.editingUser = null; this.fetchData();
     },
+    getImageUrl(path) { return getImageUrl(path); },
     openImage(url) { 
       if(url) this.zoomUrl = url; 
     },
