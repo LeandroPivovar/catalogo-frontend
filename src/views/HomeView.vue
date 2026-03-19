@@ -122,6 +122,14 @@ export default {
     async fetchModels() {
       try {
         const response = await api.get('/public/models');
+        
+        // Garantir que a resposta seja um array
+        if (!Array.isArray(response.data)) {
+          console.error("Erro: A API de modelos não retornou uma lista. Conteúdo recebido:", response.data);
+          this.models = [];
+          return;
+        }
+
         this.models = response.data.map(user => {
           let photos = [];
           if (user.galleryPhotos) {
