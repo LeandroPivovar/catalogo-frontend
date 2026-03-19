@@ -52,8 +52,9 @@
               <a href="#" class="forgot-pass">Esqueceu a senha?</a>
             </div>
 
-            <button class="auth-btn red-btn" @click="handleLogin">
-              Entrar
+            <button class="auth-btn red-btn" @click="handleLogin" :disabled="loading">
+              <span v-if="loading"><i class="fas fa-spinner fa-spin"></i> Entrando...</span>
+              <span v-else>Entrar</span>
             </button>
           </div>
 
@@ -142,8 +143,9 @@
               </div>
             </div>
 
-            <button class="auth-btn red-btn" @click="handleRegister">
-              Cadastrar
+            <button class="auth-btn red-btn" @click="handleRegister" :disabled="loading">
+              <span v-if="loading"><i class="fas fa-spinner fa-spin"></i> Cadastrando...</span>
+              <span v-else>Cadastrar</span>
             </button>
           </div>
         </transition>
@@ -185,19 +187,29 @@ export default {
         phone: '',
         email: '',
         password: ''
-      }
+      },
+      loading: false
     };
   },
   methods: {
     async handleLogin() {
+      if (this.loading) return;
+      this.loading = true;
       try {
         const response = await api.post('/auth/login', this.loginData);
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userStatus', response.data.user.status);
+        localStorage.setItem('emailVerified', response.data.user.emailVerified);
         
-        this.showToast('Login realizado com sucesso! Redirecionando...');
+        if (!response.data.user.emailVerified) {
+          this.showToast('Por favor, confirme seu e-mail antes de acessar. Enviamos um link para você.', 'error');
+        } else if (response.data.user.status === 'pending') {
+          this.showToast('E-mail confirmado! Sua conta agora está em análise pela nossa equipe.', 'warning');
+        } else {
+          this.showToast('Login realizado com sucesso! Redirecionando...');
+        }
         
-        // Se a conta for pending, o router vai capturar e mandar para /pending automaticamente!
+        // Se para a conta for pending ou e-mail não verificado, o router/dashboard redirecionará para /pending
         setTimeout(() => this.$router.push('/dashboard'), 1500);
       } catch (error) {
         if (error.response?.data?.status === 'rejected') {
@@ -206,14 +218,18 @@ export default {
         }
         const message = error.response?.data?.error || error.response?.data?.message || 'Erro ao realizar login.';
         this.showToast(message, 'error');
+      } finally {
+        this.loading = false;
       }
     },
     async handleRegister() {
+      if (this.loading) return;
       if (!this.rgFrentePreview || !this.rgVersoPreview) {
         this.showToast('Por favor, envie as fotos do RG frente e verso.', 'error');
         return;
       }
       
+      this.loading = true;
       try {
         // Para fins de POC, estamos enviando as URLs como placeholders
         // No futuro, implementaremos o upload real de arquivos
@@ -223,9 +239,9 @@ export default {
           rgVersoUrl: this.rgVersoPreview
         };
         
-        const response = await api.post('/auth/register', data);
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userStatus', response.data.user.status);
+        localStorage.setItem('emailVerified', response.data.user.emailVerified);
         
         this.registerData = { name: '', cpf: '', birthDate: '', phone: '', email: '', password: '' };
         this.rgFrentePreview = '';
@@ -236,6 +252,8 @@ export default {
       } catch (error) {
         const message = error.response?.data?.error || error.response?.data?.message || 'Erro ao realizar cadastro.';
         this.showToast(message, 'error');
+      } finally {
+        this.loading = false;
       }
     },
     handleFile(e, type) {

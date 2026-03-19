@@ -95,8 +95,9 @@
           </div>
           
           <div class="global-save-wrapper" style="margin-top: 20px; text-align: center;">
-            <button type="submit" class="action-btn red-btn global-save-btn" style="width: 100%; padding: 18px; font-size: 1.1rem;">
-              <i class="fas fa-save"></i> Salvar Todas as Configurações (Textos e Fotos)
+            <button type="submit" class="action-btn red-btn global-save-btn" style="width: 100%; padding: 18px; font-size: 1.1rem;" :disabled="saveLoading">
+              <span v-if="saveLoading"><i class="fas fa-spinner fa-spin"></i> Salvando Alterações...</span>
+              <span v-else><i class="fas fa-save"></i> Salvar Todas as Configurações (Textos e Fotos)</span>
             </button>
           </div>
           </form>
@@ -126,7 +127,10 @@
                 </div>
               </div>
               <p v-if="passwordError" class="error-text" :style="{ color: passwordError === 'As senhas coincidem!' ? '#2ecc71' : '#bd2727' }">{{ passwordError }}</p>
-              <button type="submit" class="action-btn dark-btn">Alterar Senha</button>
+              <button type="submit" class="action-btn dark-btn" :disabled="passwordLoading">
+                <span v-if="passwordLoading"><i class="fas fa-spinner fa-spin"></i> Alterando...</span>
+                <span v-else>Alterar Senha</span>
+              </button>
             </form>
           </div>
         </div>
@@ -200,7 +204,10 @@
                 <span>Custo:</span>
                 <span class="cost-value">50 créditos</span>
               </div>
-              <button class="action-btn red-btn boost-action-btn" @click="boostNow">Impulsionar Agora</button>
+              <button class="action-btn red-btn boost-action-btn" @click="boostNow" :disabled="boostLoading">
+                <span v-if="boostLoading"><i class="fas fa-spinner fa-spin"></i> Processando...</span>
+                <span v-else>Impulsionar Agora</span>
+              </button>
             </div>
 
             <div v-if="boostMode === 'schedule'" class="boost-panel">
@@ -215,7 +222,10 @@
                 <span>Custo:</span>
                 <span class="cost-value">50 créditos</span>
               </div>
-              <button class="action-btn red-btn boost-action-btn" @click="scheduleBoost">Agendar Impulsão</button>
+              <button class="action-btn red-btn boost-action-btn" @click="scheduleBoost" :disabled="boostLoading">
+                <span v-if="boostLoading"><i class="fas fa-spinner fa-spin"></i> Agendando...</span>
+                <span v-else>Agendar Impulsão</span>
+              </button>
             </div>
           </div>
         </div>
@@ -483,7 +493,10 @@ export default {
       billing: { name: '', email: '', taxId: '' },
       pixData: { qrCode: null, copyPaste: '', clientSecret: '' },
       paymentIntentId: null,
-      checkInterval: null
+      checkInterval: null,
+      saveLoading: false,
+      passwordLoading: false,
+      boostLoading: false
     };
   },
   computed: {
@@ -568,6 +581,13 @@ export default {
       try {
         const response = await api.get('/user/profile');
         const userData = response.data;
+
+        // Se o e-mail não estiver verificado ou a conta estiver pendente, manda pro /pending
+        if (!userData.emailVerified || userData.status === 'pending') {
+          this.$router.push('/pending');
+          return;
+        }
+
         this.profile.name = userData.name || "Usuário";
         this.profile.bio = userData.bio || "";
         this.profile.whatsapp = userData.whatsapp || "";
@@ -976,10 +996,13 @@ export default {
           coverPhotoUrl: this.profile.coverPhoto ? JSON.stringify(this.profile.coverPhoto) : null,
           galleryPhotos: this.profile.photos
         };
+        this.saveLoading = true;
         await api.put('/user/profile', data);
         this.showToast('Perfil salvo com sucesso!');
       } catch (error) {
         this.showToast('Erro ao salvar perfil.', 'error');
+      } finally {
+        this.saveLoading = false;
       }
     },
     showToast(message, type = 'success') {
@@ -995,12 +1018,15 @@ export default {
         return; 
       }
       
+      this.boostLoading = true;
       try {
         const response = await api.post('/user/boost');
         this.credits = response.data.credits;
         this.showToast('Perfil impulsionado para o Top 1 com sucesso!');
       } catch (e) {
         this.showToast(e.response?.data?.error || 'Erro ao impulsionar.', 'error');
+      } finally {
+        this.boostLoading = false;
       }
     },
     async scheduleBoost() {
@@ -1013,6 +1039,7 @@ export default {
         return; 
       }
 
+      this.boostLoading = true;
       try {
         const response = await api.post('/user/boost', { date: this.scheduleDate });
         this.credits = response.data.credits;
@@ -1020,6 +1047,8 @@ export default {
         this.scheduleDate = '';
       } catch (e) {
         this.showToast(e.response?.data?.error || 'Erro ao agendar.', 'error');
+      } finally {
+        this.boostLoading = false;
       }
     },
     async updatePassword() {
@@ -1032,6 +1061,7 @@ export default {
         return;
       }
       
+      this.passwordLoading = true;
       try {
         await api.put('/user/password', { newPassword: this.passwords.new });
         this.showToast('Senha alterada com sucesso!');
@@ -1041,6 +1071,8 @@ export default {
       } catch (error) {
         const message = error.response?.data?.message || 'Erro ao alterar senha.';
         this.showToast(message, 'error');
+      } finally {
+        this.passwordLoading = false;
       }
     },
     async fetchAnalytics() {

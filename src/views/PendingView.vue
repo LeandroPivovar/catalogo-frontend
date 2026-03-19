@@ -4,15 +4,31 @@
       <div class="pending-icon">
         <i class="far fa-clock"></i>
       </div>
-      <h1 class="pending-title">Sua conta está em análise</h1>
-      <p class="pending-text">
-        Recebemos seu cadastro e os documentos enviados! Nossa equipe está verificando as informações.
-        <br><br>
-        <strong>Você não poderá acessar as configurações ou o painel até que a conta seja aprovada.</strong>
-      </p>
+      <div v-if="!emailVerified">
+        <h1 class="pending-title">Confirme seu E-mail</h1>
+        <p class="pending-text">
+          Enviamos um link de confirmação para o seu e-mail. 
+          <br><strong>Por favor, verifique sua caixa de entrada (e a pasta de SPAM) para concluir o cadastro.</strong>
+        </p>
+      </div>
+
+      <div v-else>
+        <h1 class="pending-title">Sua conta está em análise</h1>
+        <p class="pending-text">
+          Seu e-mail foi confirmado com sucesso! 👋
+          <br><br>
+          Agora nossa equipe está verificando seus documentos. Em breve seu perfil estará ativo no catálogo.
+        </p>
+      </div>
       
       <div class="actions">
-        <button class="action-btn red-btn" @click="$router.push('/')">Ir para Catálogo</button>
+        <button v-if="!emailVerified" class="action-btn red-btn" @click="checkStatus">
+          <i class="fas fa-sync-alt"></i> Já confirmei o e-mail
+        </button>
+        <button v-else class="action-btn red-btn" @click="checkStatus">
+          <i class="fas fa-sync-alt"></i> Atualizar Status de Análise
+        </button>
+        <button class="action-btn" :class="emailVerified ? 'dark-btn' : 'red-btn'" @click="$router.push('/')">Ir para Catálogo</button>
         <button class="action-btn dark-btn" @click="logout">Sair da Conta</button>
       </div>
     </div>
@@ -20,12 +36,37 @@
 </template>
 
 <script>
+import api from "../services/api";
+
 export default {
   name: 'PendingView',
+  data() {
+    return {
+      emailVerified: localStorage.getItem('emailVerified') === 'true'
+    }
+  },
+  created() {
+    this.checkStatus();
+  },
   methods: {
+    async checkStatus() {
+      try {
+        const res = await api.get('/user/profile');
+        this.emailVerified = res.data.emailVerified;
+        localStorage.setItem('emailVerified', this.emailVerified);
+        
+        // Se já foi aprovado e verificado, manda pro dashboard
+        if (this.emailVerified && res.data.status === 'approved' || res.data.status === 'active') {
+          this.$router.push('/dashboard');
+        }
+      } catch (e) {
+        console.error("Erro ao verificar status", e);
+      }
+    },
     logout() {
       localStorage.removeItem('token');
       localStorage.removeItem('userStatus');
+      localStorage.removeItem('emailVerified');
       this.$router.push('/auth');
     }
   }
