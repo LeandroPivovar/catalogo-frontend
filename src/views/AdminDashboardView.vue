@@ -287,6 +287,14 @@
         </div>
       </div>
     </div>
+
+    <!-- ZOOM MODAL (KYC) -->
+    <div v-if="zoomUrl" class="zoom-overlay fade-in" @click="zoomUrl = null">
+      <div class="zoom-content" @click.stop>
+        <img :src="zoomUrl" class="zoomed-image">
+        <button class="close-zoom" @click="zoomUrl = null">&times;</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -304,6 +312,7 @@ export default {
       search: "",
       editingUser: null,
       editForm: {},
+      zoomUrl: null,
       finance: { summary: { daily: 0, monthly: 0, total: 0, projection: 0 }, recentSales: [], dailyHistory: [] }
     };
   },
@@ -349,7 +358,9 @@ export default {
       await api.put(`/admin/users/${this.editForm.id}`, this.editForm);
       this.editingUser = null; this.fetchData();
     },
-    openImage(url) { if(url) window.open(url, '_blank'); },
+    openImage(url) { 
+      if(url) this.zoomUrl = url; 
+    },
     logout() { localStorage.clear(); this.$router.push("/admin/login"); }
   }
 };
@@ -493,4 +504,35 @@ export default {
 
 .slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ZOOM MODAL STYLES */
+.zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(15px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 40px;
+}
+.zoom-content { position: relative; max-width: 90%; max-height: 90vh; }
+.zoomed-image { 
+  max-width: 100%; 
+  max-height: 85vh; 
+  border-radius: 12px; 
+  box-shadow: 0 0 100px rgba(0,0,0,0.8); 
+  object-fit: contain; 
+}
+.close-zoom {
+  position: absolute;
+  top: -60px;
+  right: -20px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 3rem;
+  cursor: pointer;
+}
 </style>
